@@ -63,14 +63,16 @@ foreach ($esxiHost in $esxiHosts) {
  # read-host "Reboot $name ?"
  Add-Log Maintenance ('{0}, Changing host state to MaintenanceMode' -f $name) $logPath $WhatIf
  Set-VMHost -VMHost $name -State Maintenance -Evacuate:$true -Confirm:$false -WhatIf:$WhatIf
+ Add-Log wait '60 seconds'
  if (!$WhatIf) { Start-Sleep 60 }
  Add-Log restart ('{0}, restarting ESXi Host' -f $name) $logPath $WhatIf
  Restart-VMhost -VMHost $name -Confirm:$false -Force -WhatIf:$WhatIf
+ Add-Log wait '300 seconds'
  if (!$WhatIf) { Start-Sleep 300 }
  # wait for host to restart and reconnect
  do {
   if (!$WhatIf) {
-   Write-Verbose "Waiting 60 seconds..."
+   Add-Log wait '60 seconds'
    Start-Sleep 60
   } 
  }

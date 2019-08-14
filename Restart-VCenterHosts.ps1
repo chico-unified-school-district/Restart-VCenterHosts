@@ -40,11 +40,18 @@ Clear-Host
 # Main Process
 if (Get-Module -ListAvailable -name VMware.VimAutomation.Core) {
  Import-Module -Name VMware.VimAutomation.Core
- if ($global:defaultviserver) { Disconnect-VIServer -Server * -Confirm:$false }
- Connect-VIServer -Server $Server -Credential $Credential
 }
-else { Add-Log error "VMware.VimAutomation.Core not available. EXITING"; EXIT }
+else { 
+ Install-Module -Name VMware.PowerCLI -Scope CurrentUser
+ Import-Module -Name VMware.VimAutomation.Core
+}
+if ( !(Get-Module -ListAvailable -name VMware.VimAutomation.Core)) {
+ Add-Log error "VMware.VimAutomation.Core not available. EXITING"
+ EXIT 
+}
 
+if ($global:defaultviserver) { Disconnect-VIServer -Server * -Confirm:$false }
+Connect-VIServer -Server $Server -Credential $Credential
 # Get a list of all hosts
 $esxiHosts = Get-VMHost
 

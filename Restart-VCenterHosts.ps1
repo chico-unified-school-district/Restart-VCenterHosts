@@ -43,7 +43,7 @@ if (Get-Module -name VMware.VimAutomation.Core) {
  if ($global:defaultviserver) { Disconnect-VIServer -Server * -Confirm:$false }
  Connect-VIServer -Server $Server -Credential $Credential
 }
-else { Add-Log error "VMware.VimAutomation.Core not available" }
+else { Add-Log error "VMware.VimAutomation.Core not available. EXITING"; EXIT }
 
 # Get a list of all hosts
 $esxiHosts = Get-VMHost

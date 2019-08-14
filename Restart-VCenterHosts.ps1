@@ -59,12 +59,22 @@ $esxiHosts = Get-VMHost
 # Shutdown VMHosts
 foreach ($esxiHost in $esxiHosts) {
  $name = $esxiHost.name
+ Write-Debug "Reboot $name ?"
+ # read-host "Reboot $name ?"
+ Add-Log Maintenance ('{0}, Changing host state to MaintenanceMode' -f $name) $logPath $WhatIf
  Set-VMHost -VMHost $name -State Maintenance -Evacuate:$true -Confirm:$false -WhatIf:$WhatIf
+ Start-Sleep 300
  Add-Log restart ('{0}, restarting ESXi Host' -f $name) $logPath $WhatIf
  Restart-VMhost -VMHost $name -Confirm:$false -Force -WhatIf:$WhatIf
+ Start-Sleep 300
  # wait for host to restart and reconnect
- do { if (!$WhatIf) { Start-Sleep 60 } }
- until ( ((Get-VMHost -Name $name).ConnectionState -eq 'Connected'))
+ do {
+  if (!$WhatIf) {
+   Write-Verbose "Waiting 60 seconds..."
+   Start-Sleep 60
+  } 
+ }
+ until ( ((Get-VMHost -Name $name).ConnectionState -eq 'Maintenance'))
  Set-VMHost -VMHost $name -State Connected -Confirm:$false -WhatIf:$WhatIf
  $bootTime = (Get-VMHost -Name $name | Get-View).runtime.boottime
  Add-Log bootime ('{0},{1}' -f $name, $bootTime )

@@ -30,9 +30,9 @@ param (
  [System.Management.Automation.PSCredential]$Credential,
  [switch]$WhatIf
 )
-
+# $env:psmodulepath += 'C:\Program Files (x86)\VMware\Infrastructure\PowerCLI\Modules'
 Clear-Host
-
+$env:psmodulepath = 'C:\Program Files\WindowsPowerShell\Modules; C:\Windows\system32\config\systemprofile\Documents\WindowsPowerShell\Modules; C:\Program Files (x86)\WindowsPowerShell\Modules; C:\Windows\system32\WindowsPowerShell\v1.0\Modules; C:\Program Files (x86)\VMware\Infrastructure\PowerCLI\Modules'
 # Import Modules
 # Import Functions
 . .\lib\Add-Log.ps1

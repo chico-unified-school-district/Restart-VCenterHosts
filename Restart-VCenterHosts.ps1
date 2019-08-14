@@ -50,8 +50,9 @@ if ( !(Get-Module -ListAvailable -name VMware.VimAutomation.Core)) {
  EXIT 
 }
 
+Set-PowerCLIConfiguration -InvalidCertificateAction Ignore
 if ($global:defaultviserver) { Disconnect-VIServer -Server * -Confirm:$false }
-Connect-VIServer -Server $Server -Credential $Credential
+Connect-VIServer -Server $Server -Credential $Credential | Out-Null
 # Get a list of all hosts
 $esxiHosts = Get-VMHost
 

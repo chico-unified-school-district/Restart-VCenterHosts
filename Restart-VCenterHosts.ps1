@@ -34,12 +34,12 @@ param (
 Clear-Host
 
 # Import Modules
-Import-Module -Name VMware.VimAutomation.Core
 # Import Functions
 . .\lib\Add-Log.ps1
 
 # Main Process
 if (Get-Module -name VMware.VimAutomation.Core) {
+ Import-Module -Name VMware.VimAutomation.Core
  if ($global:defaultviserver) { Disconnect-VIServer -Server * -Confirm:$false }
  Connect-VIServer -Server $Server -Credential $Credential
 }

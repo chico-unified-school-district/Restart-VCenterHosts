@@ -42,7 +42,7 @@ if (Get-Module -ListAvailable -name VMware.VimAutomation.Core) {
  Import-Module -Name VMware.VimAutomation.Core
 }
 else { 
- Install-Module -Name VMware.PowerCLI -Scope CurrentUser
+ Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Force -Confirm:$false
  Import-Module -Name VMware.VimAutomation.Core
 }
 if ( !(Get-Module -ListAvailable -name VMware.VimAutomation.Core)) {

@@ -74,16 +74,17 @@ foreach ($esxiHost in $esxiHosts) {
   Start-Sleep 300
  }
  # wait for host to restart and reconnect
- do {
-  if (!$WhatIf) {
+ if (!$WhatIf) {
+  do {
    Add-Log wait '60 seconds'
    Start-Sleep 60
-  } 
+  }
+  until ( ((Get-VMHost -Name $name).ConnectionState -eq 'Maintenance'))
  }
- until ( ((Get-VMHost -Name $name).ConnectionState -eq 'Maintenance'))
- Set-VMHost -VMHost $name -State Connected -Confirm:$false -WhatIf:$WhatIf
- $bootTime = (Get-VMHost -Name $name | Get-View).runtime.boottime
- Add-Log bootime ('{0},{1}' -f $name, $bootTime )
+}
+Set-VMHost -VMHost $name -State Connected -Confirm:$false -WhatIf:$WhatIf
+$bootTime = (Get-VMHost -Name $name | Get-View).runtime.boottime
+Add-Log bootime ('{0},{1}' -f $name, $bootTime )
 }
 
 Disconnect-VIServer -Server * -Confirm:$false

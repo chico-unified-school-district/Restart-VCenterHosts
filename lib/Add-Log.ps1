@@ -1,6 +1,6 @@
 function Add-Log {
 	[cmdletbinding()]
-	Param ( 
+	Param (
 		[Parameter(Position = 0, Mandatory = $True)]
 		[STRING]$Type,
   [Parameter(Position = 1, Mandatory = $True)]
@@ -10,8 +10,8 @@ function Add-Log {
   $logPath,
   [Parameter(Position = 4, Mandatory = $false)]
   [switch]$WhatIf )
- begin { 
-  $date = Get-Date -Format s 
+ begin {
+  $date = Get-Date -Format u
   $type = "[$($type.toUpper())]"
   $testString = if ($WhatIf) { "[WhatIf]," }
  }

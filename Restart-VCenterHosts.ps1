@@ -123,17 +123,17 @@ foreach ($cluster in $allClusters) { # Begin Processing Clusters
      until ( ((Get-VMHost $name).ConnectionState -eq 'Maintenance') -or ( $i -eq 0 ) -or $WhatIf )
     }
 
-    Start-Sleep 5 # Wait for host to settle down
+    if (!$WhatIf) { Start-Sleep 5 } # Wait for host to settle down
 
     Add-Log restart ('{0}, restarting ESXi Host' -f $name) $logPath $WhatIf
     Restart-VMhost -VMHost $name -Confirm:$false -Force -WhatIf:$WhatIf | Out-Null
-    Start-Sleep 120 # Wait for host to settle down
+    if (!$WhatIf) { Start-Sleep 120 } # Wait for host to settle down
     # wait for host to restart and reconnect
     $i = 600 # 10 minute max wait time for host reboot
     do { Write-Progress -Act "$name,Wait For Host Reconnect" -SecondsRemaining $i; Start-Sleep 1; $i-- }
     until ( ((Get-VMHost -Name $name).ConnectionState -eq 'Maintenance') -or ($i -eq 0) -or $WhatIf)
 
-    Start-Sleep 5 # Wait for host to settle down
+    if (!$WhatIf) { Start-Sleep 5 } # Wait for host to settle down
 
     Set-VMHost $name -State Connected -Confirm:$false -WhatIf:$WhatIf | Out-Null
     $bootTime = (Get-VMHost -Name $name | Get-View).runtime.boottime
@@ -143,7 +143,7 @@ foreach ($cluster in $allClusters) { # Begin Processing Clusters
 
   # Restore HA and DRS settings
 
-  for ($i=180;$i -ge 0;$i--){write-progress -Act 'Wait For Storage' -SecondsRemaining $i;start-sleep 1}
+  if (!$WhatIf) { for ($i=180;$i -ge 0;$i--){write-progress -Act 'Wait For Storage' -SecondsRemaining $i;start-sleep 1} }
   try {
    Add-log drs ('{0},Attempting to set DRS to {1}' -f $targetName,$DrsAutomationLevel)
    $cluster |

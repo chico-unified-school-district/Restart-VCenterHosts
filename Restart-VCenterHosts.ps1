@@ -53,8 +53,9 @@ $env:psmodulepath = 'C:\Program Files\WindowsPowerShell\Modules; C:\Windows\syst
 
 # Main Process
 if (Get-Module -ListAvailable -name VMware.VimAutomation.Core) {
- $cmdlets = 'Connect-VIServer','Disconnect-VIServer','Get-Cluster','Set-Cluster','Get-VMHost','Set-VMHost ','Restart-VMhost'
- Import-Module -Name VMware.VimAutomation.Core -Cmdlet $cmdlets | Out-Null
+ # $cmdlets = 'Connect-VIServer','Disconnect-VIServer','Get-Cluster','Set-Cluster','Get-VMHost','Set-VMHost ','Restart-VMhost'
+ # Import-Module -Name VMware.VimAutomation.Core -Cmdlet $cmdlets | Out-Null
+ Import-Module -Name VMware.VimAutomation.Core | Out-Null
 }
 else {
  Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Force -Confirm:$false

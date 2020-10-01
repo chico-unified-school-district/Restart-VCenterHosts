@@ -64,6 +64,7 @@ if ( !(Get-Module -ListAvailable -name VMware.VimAutomation.Core)) {
  Add-Log error "VMware.VimAutomation.Core not available. EXITING"
  EXIT
 }
+Get-PowerCLIVersion
 
 Set-PowerCLIConfiguration -InvalidCertificateAction Ignore -Scope User -Confirm:$false | Out-Null
 if ($global:defaultviserver) { Disconnect-VIServer -Server * -Confirm:$false }

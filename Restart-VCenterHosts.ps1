@@ -110,34 +110,34 @@ foreach ($cluster in $allClusters) { # Begin Processing Clusters
    }
    else {
     # Reboot VMHosts
-    $name = $esxiHost.name
-    Write-Debug "Reboot $name ?"
-    if ( (Get-VMHost $name).ConnectionState -eq 'Maintenance') {
-     Add-Log Maintenance ('{0}, host already in MaintenanceMode' -f $name) $logPath $WhatIf
+    $vmHostName = $esxiHost.name
+    Write-Debug "Reboot $vmHostName ?"
+    if ( (Get-VMHost $vmHostName).ConnectionState -eq 'Maintenance') {
+     Add-Log Maintenance ('{0}, host already in MaintenanceMode' -f $vmHostName) $logPath $WhatIf
     } else {
-     Add-Log Maintenance ('{0}, Changing host state to MaintenanceMode' -f $name) $logPath $WhatIf
-     Set-VMHost $name -State Maintenance -Evacuate:$true -Confirm:$false -WhatIf:$WhatIf | Out-Null
+     Add-Log Maintenance ('{0}, Changing host state to MaintenanceMode' -f $vmHostName) $logPath $WhatIf
+     Set-VMHost $vmHostName -State Maintenance -Evacuate:$true -Confirm:$false -WhatIf:$WhatIf | Out-Null
      # test for MaintenanceMode
      $i = 1800 # 30 minutes max wait time for host evacuation
-     do { Start-Sleep 1; Write-Progress -Act "$name,Wait For Maintenance Mode" -SecondsRemaining $i ;$i-- }
-     until ( ((Get-VMHost $name).ConnectionState -eq 'Maintenance') -or ( $i -eq 0 ) -or $WhatIf )
+     do { Start-Sleep 1; Write-Progress -Act "$vmHostName,Wait For Maintenance Mode" -SecondsRemaining $i ;$i-- }
+     until ( ((Get-VMHost $vmHostName).ConnectionState -eq 'Maintenance') -or ( $i -eq 0 ) -or $WhatIf )
     }
 
     if (!$WhatIf) { Start-Sleep 5 } # Wait for host to settle down
 
-    Add-Log restart ('{0}, restarting ESXi Host' -f $name) $logPath $WhatIf
-    Restart-VMhost -VMHost $name -Confirm:$false -Force -WhatIf:$WhatIf | Out-Null
+    Add-Log restart ('{0}, restarting ESXi Host' -f $vmHostName) $logPath $WhatIf
+    Restart-VMhost -VMHost $vmHostName -Confirm:$false -Force -WhatIf:$WhatIf | Out-Null
     if (!$WhatIf) { Start-Sleep 120 } # Wait for host to settle down
     # wait for host to restart and reconnect
     $i = 600 # 10 minute max wait time for host reboot
-    do { Write-Progress -Act "$name,Wait For Host Reconnect" -SecondsRemaining $i; Start-Sleep 1; $i-- }
-    until ( ((Get-VMHost -Name $name).ConnectionState -eq 'Maintenance') -or ($i -eq 0) -or $WhatIf)
+    do { Write-Progress -Act "$vmHostName,Wait For Host Reconnect" -SecondsRemaining $i; Start-Sleep 1; $i-- }
+    until ( ((Get-VMHost -Name $vmHostName).ConnectionState -eq 'Maintenance') -or ($i -eq 0) -or $WhatIf)
 
-    if (!$WhatIf) { Start-Sleep 5 } # Wait for host to settle down
+    if (!$WhatIf) { Start-Sleep 10 } # Wait for host to settle down
 
-    Set-VMHost $name -State Connected -Confirm:$false -WhatIf:$WhatIf | Out-Null
-    $bootTime = (Get-VMHost -Name $name | Get-View).runtime.boottime
-    Add-Log bootime ('{0},{1}' -f $name, $bootTime )
+    Set-VMHost $vmHostName -State Connected -Confirm:$false -WhatIf:$WhatIf | Out-Null
+    # $bootTime = (Get-VMHost -Name $vmHostName | Get-View).runtime.boottime
+    Add-Log connected $vmHostName
     }
   }
 

@@ -199,5 +199,6 @@ foreach ($server in $VIServers) {
   }
  } # End Processing VISserver Clusters
 } # End Processing VIservers
+
 # Clean up
-Disconnect-VIServer -Server * -Confirm:$false
+if ($global:defaultviserver) { Disconnect-VIServer -Server * -Confirm:$false }

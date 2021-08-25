@@ -158,7 +158,7 @@ foreach ($server in $VIServers) {
    Add-Log storage 'Waiting for storage'
    if (!$WhatIf) { for ($i = 180; $i -ge 0; $i--) { write-progress -Act 'Wait For Storage' -SecondsRemaining $i; start-sleep 1 } }
    try {
-    Add-log drs ('{0},Attempting to set DRS to {1}' -f $targetName, $DrsAutomationLevel)
+    Add-log drs ('{0},Attempting to set DRS to {1}' -f $targetName, $DrsAutomationLevel) -WhatIf:$WhatIf
     $cluster |
     Set-Cluster -HAEnabled:$true -DrsAutomationLevel $DrsAutomationLevel `
      -Confirm:$false -ErrorVariable resetClusterError -WhatIf:$WhatIf | Out-Null
@@ -168,7 +168,7 @@ foreach ($server in $VIServers) {
     $resetClusterError
     continue
    }
-   Add-Log cluster ('{0},HA and DRS settings restored' -f $targetName)
+   Add-Log cluster ('{0},HA and DRS settings restored' -f $targetName) -WhatIf:$WhatIf
   }
  } # End Processing VISserver Clusters
 } # End Processing VIservers

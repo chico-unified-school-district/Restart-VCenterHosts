@@ -54,6 +54,13 @@ $env:psmodulepath = 'C:\Program Files\WindowsPowerShell\Modules; C:\Windows\syst
 . .\lib\Add-Log.ps1
 
 # Main Process
+$cmdlets = @(
+ 'Connect-VIServer'
+ 'Get-Cluster'
+ 'Get-VMhost'
+ 'Set-VM-Host'
+)
+
 if (Get-Module -ListAvailable -name VMware.VimAutomation.Core) {
  Import-Module -Name VMware.VimAutomation.Core | Out-Null
 }
@@ -65,7 +72,6 @@ if ( !(Get-Module -ListAvailable -name VMware.VimAutomation.Core)) {
  Add-Log error "VMware.VimAutomation.Core not available. EXITING"
  EXIT
 }
-# Get-PowerCLIVersion
 
 Set-PowerCLIConfiguration -InvalidCertificateAction Ignore -Scope User -Confirm:$false | Out-Null
 if ($global:defaultviserver) { Disconnect-VIServer -Server * -Confirm:$false }

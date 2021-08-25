@@ -132,6 +132,7 @@ foreach ($server in $VIServers) {
       Set-VMHost $vmHostName -State Maintenance -Evacuate:$true -Confirm:$false -WhatIf:$WhatIf | Out-Null
       # test for MaintenanceMode
       $i = 1800 # 30 minutes max wait time for host evacuation
+      Add-Log wait '30 minutes max wait for host evacuation'
       do {
        Start-Sleep 1
        # Write-Progress -Act "$vmHostName,Wait For Maintenance Mode" -SecondsRemaining $i

@@ -31,7 +31,7 @@
 param (
  # Target VIServer
  [Parameter(Mandatory = $True)]
- [ValidateScript( { Test-Connection -ComputerName $_ -Quiet -Count 1 })]
+ [ValidateScript( { Test-Connection -ComputerName $_ -Quiet -Count 3 })]
  [string[]]$VIServers,
  # VIServer Credentials with Proper Permission Levels
  [Parameter(Mandatory = $True)]

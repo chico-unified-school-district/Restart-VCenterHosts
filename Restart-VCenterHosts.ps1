@@ -81,7 +81,7 @@ if ($global:defaultviserver) { Disconnect-VIServer -Server * -Confirm:$false }
 
 foreach ($server in $VIServers) {
  Add-Log viserver "Connecting to $server"
- Connect-VIServer -Server $server -Credential $Credential
+ Connect-VIServer -Server $server -Credential $Credential -ErrorAction Stop | Out-Null
  $allTargetClusters = Get-Cluster -Server $server
  # Begin Processing Clusters
  foreach ($cluster in $allTargetClusters) {

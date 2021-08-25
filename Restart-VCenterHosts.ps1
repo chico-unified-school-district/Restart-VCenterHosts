@@ -83,9 +83,9 @@ foreach ($server in $VIServers) {
    $targetName = $cluster.name
    # ============ Temporarily disable HA and Set DRS to Automatic ================
    try {
-    $cluster | 
-    Set-Cluster -HAEnabled:$false -Confirm:$false -ErrorVariable clusterHAError -WhatIf:$WhatIf | 
-    Out-Null 
+    $cluster |
+    Set-Cluster -HAEnabled:$false -Confirm:$false -ErrorVariable clusterHAError -WhatIf:$WhatIf |
+    Out-Null
    }
    catch {
     Add-Log error ('{0},HA disable error. Skipping hosts reboot on Cluster {0}' -f $targetName)
@@ -98,7 +98,7 @@ foreach ($server in $VIServers) {
    $DrsAutomationLevel = $cluster.DrsAutomationLevel
    if ($DrsAutomationLevel -ne 'FullyAutomated') {
     try {
-     $cluster | 
+     $cluster |
      Set-Cluster -DrsAutomationLevel FullyAutomated -Confirm:$false -ErrorVariable clusterDRSError -WhatIf:$WhatIf |
      Out-Null
     }
@@ -132,10 +132,10 @@ foreach ($server in $VIServers) {
       Set-VMHost $vmHostName -State Maintenance -Evacuate:$true -Confirm:$false -WhatIf:$WhatIf | Out-Null
       # test for MaintenanceMode
       $i = 1800 # 30 minutes max wait time for host evacuation
-      do { 
+      do {
        Start-Sleep 1
        # Write-Progress -Act "$vmHostName,Wait For Maintenance Mode" -SecondsRemaining $i
-       $i-- 
+       $i--
       }
       until ( ((Get-VMHost $vmHostName).ConnectionState -eq 'Maintenance') -or ( $i -eq 0 ) -or $WhatIf )
      }
@@ -144,15 +144,15 @@ foreach ($server in $VIServers) {
 
      Add-Log restart ('{0}, Restarting ESXi Host' -f $vmHostName) $logPath $WhatIf
      Restart-VMhost -VMHost $vmHostName -Confirm:$false -Force -WhatIf:$WhatIf | Out-Null
-     if (!$WhatIf) { 
-      Start-Sleep 120 
+     if (!$WhatIf) {
+      Start-Sleep 120
      } # Wait for host to settle down
      # wait for host to restart and reconnect
      $i = 600 # 10 minute max wait time for host reboot
-     do { 
+     do {
       # Write-Progress -Act "$vmHostName,Wait For Host Reconnect" -SecondsRemaining $i
       Start-Sleep 1
-      $i-- 
+      $i--
      }
      until ( ((Get-VMHost -Name $vmHostName).ConnectionState -eq 'Maintenance') -or ($i -eq 0) -or $WhatIf)
 
@@ -167,9 +167,9 @@ foreach ($server in $VIServers) {
    # Restore HA and DRS settings
    if (!$WhatIf) {
     Add-Log storage 'Waiting for storage'
-    for ($i = 180; $i -ge 0; $i--) { 
+    for ($i = 180; $i -ge 0; $i--) {
      write-progress -Act 'Wait For Storage' -SecondsRemaining $i
-     start-sleep 1 
+     start-sleep 1
     }
    }
    try {

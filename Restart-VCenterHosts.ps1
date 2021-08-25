@@ -61,6 +61,7 @@ $cmdlets = @(
  'Set-Cluster'
  'Get-VMhost'
  'Set-VMHost'
+ 'Restart-VMhost'
 )
 
 if (Get-Module -ListAvailable -name VMware.VimAutomation.Core) {

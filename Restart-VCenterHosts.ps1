@@ -144,7 +144,9 @@ foreach ($server in $VIServers) {
 
      Add-Log restart ('{0}, Restarting ESXi Host' -f $vmHostName) $logPath $WhatIf
      Restart-VMhost -VMHost $vmHostName -Confirm:$false -Force -WhatIf:$WhatIf | Out-Null
-     if (!$WhatIf) { Start-Sleep 120 } # Wait for host to settle down
+     if (!$WhatIf) { 
+      Start-Sleep 120 
+     } # Wait for host to settle down
      # wait for host to restart and reconnect
      $i = 600 # 10 minute max wait time for host reboot
      do { 
@@ -163,8 +165,8 @@ foreach ($server in $VIServers) {
    }
 
    # Restore HA and DRS settings
-   Add-Log storage 'Waiting for storage'
    if (!$WhatIf) {
+    Add-Log storage 'Waiting for storage'
     for ($i = 180; $i -ge 0; $i--) { 
      write-progress -Act 'Wait For Storage' -SecondsRemaining $i
      start-sleep 1 

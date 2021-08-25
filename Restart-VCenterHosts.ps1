@@ -198,6 +198,7 @@ foreach ($server in $VIServers) {
    Add-Log cluster ('{0},HA and DRS settings restored' -f $targetName) -WhatIf:$WhatIf
   }
  } # End Processing VISserver Clusters
+ Disconnect-VIServer -Server $server -Confirm:$false
 } # End Processing VIservers
 
 # Clean up

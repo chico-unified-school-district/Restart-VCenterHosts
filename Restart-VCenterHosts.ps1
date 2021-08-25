@@ -167,7 +167,7 @@ foreach ($server in $VIServers) {
    }
 
    # Restore HA and DRS settings
-   Add-Log storage ('{0} - {1},Waiting for storage' -f $server, $cluser.name) -WhatIf:$WhatIf
+   Add-Log storage ('{0} - {1},Waiting for storage' -f $server, $cluster.name) -WhatIf:$WhatIf
    if (!$WhatIf) {
     for ($i = 180; $i -ge 0; $i--) {
      # write-progress -Act 'Wait For Storage' -SecondsRemaining $i

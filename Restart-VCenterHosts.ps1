@@ -132,7 +132,7 @@ foreach ($server in $VIServers) {
       Set-VMHost $vmHostName -State Maintenance -Evacuate:$true -Confirm:$false -WhatIf:$WhatIf | Out-Null
       # test for MaintenanceMode
       $i = 1800 # 30 minutes max wait time for host evacuation
-      Add-Log wait '30 minutes max wait for host evacuation'
+      Add-Log wait ('{0},30 minutes max wait for host evacuation' -f $vmHostName) -WhatIf:$WhatIf
       do {
        Start-Sleep 1
        # Write-Progress -Act "$vmHostName,Wait For Maintenance Mode" -SecondsRemaining $i
@@ -150,6 +150,7 @@ foreach ($server in $VIServers) {
      } # Wait for host to settle down
      # wait for host to restart and reconnect
      $i = 600 # 10 minute max wait time for host reboot
+     Add-Log hostwait ('{0}, rebooting' -f $vmHostName) -WhatIf:$WhatIf
      do {
       # Write-Progress -Act "$vmHostName,Wait For Host Reconnect" -SecondsRemaining $i
       Start-Sleep 1
@@ -166,7 +167,7 @@ foreach ($server in $VIServers) {
    }
 
    # Restore HA and DRS settings
-   Add-Log storage 'Waiting for storage' -WhatIf:$WhatIf
+   Add-Log storage ('{0},Waiting for storage' -f $vmHostName) -WhatIf:$WhatIf
    if (!$WhatIf) {
     for ($i = 180; $i -ge 0; $i--) {
      # write-progress -Act 'Wait For Storage' -SecondsRemaining $i

@@ -65,7 +65,7 @@ $cmdlets = @(
 )
 
 if (Get-Module -ListAvailable -name VMware.VimAutomation.Core) {
- Import-Module -Name VMware.VimAutomation.Core | Out-Null
+ Import-Module -Name VMware.VimAutomation.Core  -Cmdlet $cmdlets | Out-Null
 }
 else {
  Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Force -Confirm:$false

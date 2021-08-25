@@ -55,10 +55,12 @@ $env:psmodulepath = 'C:\Program Files\WindowsPowerShell\Modules; C:\Windows\syst
 
 # Main Process
 $cmdlets = @(
+ 'Set-PowerCLIConfiguration'
  'Connect-VIServer'
  'Get-Cluster'
+ 'Set-Cluster'
  'Get-VMhost'
- 'Set-VM-Host'
+ 'Set-VMHost'
 )
 
 if (Get-Module -ListAvailable -name VMware.VimAutomation.Core) {

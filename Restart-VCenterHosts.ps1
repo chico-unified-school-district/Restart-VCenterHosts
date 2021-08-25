@@ -71,6 +71,7 @@ Set-PowerCLIConfiguration -InvalidCertificateAction Ignore -Scope User -Confirm:
 if ($global:defaultviserver) { Disconnect-VIServer -Server * -Confirm:$false }
 
 foreach ($server in $VIServers) {
+ Add-Log viserver "Connecting to $server"
  Connect-VIServer -Server $server -Credential $Credential | Out-Null
  $allTargetClusters = Get-Cluster -Server $server
  # Begin Processing Clusters

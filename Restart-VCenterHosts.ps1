@@ -19,10 +19,14 @@
 .OUTPUTS
  Log messages are output to the console.
 .NOTES
+ Special thanks:
  Warning:
  Disabling DRS will delete any resource pool on the cluster without warning!!!
  http://www.van-lieshout.com/2010/05/powercli-disableenable-ha-and-drs/
  Special thanks to Arnim van Lieshout.
+ and LucD at VMware for:
+ https://communities.vmware.com/t5/VMware-PowerCLI-Discussions/PowerCLI-Enable-Disable-Alarm-Actions-on-Hosts-Clusters/td-p/2124257
+
 
  This script requires more than one host in each cluster to function properly
 #>
@@ -32,16 +36,21 @@ param (
  # Target VIServer
  [Parameter(Mandatory = $True)]
  [ValidateScript( { Test-Connection -ComputerName $_ -Quiet -Count 1 })]
- [string]$Server,
+ [string[]]$VIServers,
  # VIServer Credentials with Proper Permission Levels
  [Parameter(Mandatory = $True)]
  [System.Management.Automation.PSCredential]$Credential,
- # Cluster Name to Skip
+ # Cluster Name(s) to Target
  [Parameter(Mandatory = $False)]
- [array]$SkipClusternames,
- # Host Name to Skip
+ [string[]]$TargetClusters,
+ # Cluster Name(s) to Skip
  [Parameter(Mandatory = $False)]
- [array]$SkipHostNames,
+ [string[]]$SkipClusters,
+ # Host Name(s) to Skip
+ [Parameter(Mandatory = $False)]
+ [string[]]$SkipHosts,
+ # If over x days then reboot host
+ [int]$RebootDays = 30,
  [Alias('wi')]
  [switch]$WhatIf
 )
@@ -69,16 +78,18 @@ Get-PowerCLIVersion
 
 Set-PowerCLIConfiguration -InvalidCertificateAction Ignore -Scope User -Confirm:$false | Out-Null
 if ($global:defaultviserver) { Disconnect-VIServer -Server * -Confirm:$false }
-Connect-VIServer -Server $Server -Credential $Credential | Out-Null
+Connect-VIServer -Server $VIServers -Credential $Credential | Out-Null
 
-$allClusters = Get-Cluster
-foreach ($cluster in $allClusters) { # Begin Processing Clusters
- if ($SkipClusternames -contains $cluster.name) {
+$allTargetClusters = Get-Cluster -Name $TargetClusters -Server $VIServers
+
+foreach ($cluster in $allTargetClusters) {
+ # Begin Processing Clusters
+ if ($SkipClusters -contains $cluster.name) {
   Add-Log skipcluster ('{0} Cluster skipped')
   continue
  }
  else {
-  $targetName = $server+'\'+$cluster.name
+  $targetName = $cluster.name
   # ============ Temporarily disable HA and Set DRS to Automatic ================
   try { $cluster | Set-Cluster -HAEnabled:$false -Confirm:$false -ErrorVariable clusterHAError -WhatIf:$WhatIf }
   catch {
@@ -90,7 +101,7 @@ foreach ($cluster in $allClusters) { # Begin Processing Clusters
 
   # Get DrsAutomationLevel, set to Automatic if needed
   $DrsAutomationLevel = $cluster.DrsAutomationLevel
-  if ($DrsAutomationLevel -ne 'FullyAutomated'){
+  if ($DrsAutomationLevel -ne 'FullyAutomated') {
    try { $cluster | Set-Cluster -DrsAutomationLevel FullyAutomated -Confirm:$false -ErrorVariable clusterDRSError -WhatIf:$WhatIf }
    catch {
     Add-Log error ('{0},DRS update error. Skipping hosts reboot on Cluster {0}' -f $targetName)
@@ -107,7 +118,7 @@ foreach ($cluster in $allClusters) { # Begin Processing Clusters
   }
 
   foreach ($esxiHost in $allClusterHosts) {
-   if ($SkipHostNames -contains $esxiHost.name) {
+   if ($SkipHosts -contains $esxiHost.name) {
     Add-Log skiphost ('{0} esxiHost skipped')
    }
    else {
@@ -116,12 +127,13 @@ foreach ($cluster in $allClusters) { # Begin Processing Clusters
     Write-Debug "Reboot $vmHostName ?"
     if ( (Get-VMHost $vmHostName).ConnectionState -eq 'Maintenance') {
      Add-Log Maintenance ('{0}, host already in MaintenanceMode' -f $vmHostName) $logPath $WhatIf
-    } else {
+    }
+    else {
      Add-Log Maintenance ('{0}, Changing host state to MaintenanceMode' -f $vmHostName) $logPath $WhatIf
      Set-VMHost $vmHostName -State Maintenance -Evacuate:$true -Confirm:$false -WhatIf:$WhatIf | Out-Null
      # test for MaintenanceMode
      $i = 1800 # 30 minutes max wait time for host evacuation
-     do { Start-Sleep 1; Write-Progress -Act "$vmHostName,Wait For Maintenance Mode" -SecondsRemaining $i ;$i-- }
+     do { Start-Sleep 1; Write-Progress -Act "$vmHostName,Wait For Maintenance Mode" -SecondsRemaining $i ; $i-- }
      until ( ((Get-VMHost $vmHostName).ConnectionState -eq 'Maintenance') -or ( $i -eq 0 ) -or $WhatIf )
     }
 
@@ -140,17 +152,17 @@ foreach ($cluster in $allClusters) { # Begin Processing Clusters
     Set-VMHost $vmHostName -State Connected -Confirm:$false -WhatIf:$WhatIf | Out-Null
     # $bootTime = (Get-VMHost -Name $vmHostName | Get-View).runtime.boottime
     Add-Log connected $vmHostName
-    }
+   }
   }
 
   # Restore HA and DRS settings
 
-  if (!$WhatIf) { for ($i=180;$i -ge 0;$i--){write-progress -Act 'Wait For Storage' -SecondsRemaining $i;start-sleep 1} }
+  if (!$WhatIf) { for ($i = 180; $i -ge 0; $i--) { write-progress -Act 'Wait For Storage' -SecondsRemaining $i; start-sleep 1 } }
   try {
-   Add-log drs ('{0},Attempting to set DRS to {1}' -f $targetName,$DrsAutomationLevel)
+   Add-log drs ('{0},Attempting to set DRS to {1}' -f $targetName, $DrsAutomationLevel)
    $cluster |
-    Set-Cluster -HAEnabled:$true -DrsAutomationLevel $DrsAutomationLevel `
-     -Confirm:$false -ErrorVariable resetClusterError -WhatIf:$WhatIf | Out-Null
+   Set-Cluster -HAEnabled:$true -DrsAutomationLevel $DrsAutomationLevel `
+    -Confirm:$false -ErrorVariable resetClusterError -WhatIf:$WhatIf | Out-Null
   }
   catch {
    Add-Log error ('{0},DRS or HA restore error. Please check cluster settngs in vCenter server.' -f $targetName)

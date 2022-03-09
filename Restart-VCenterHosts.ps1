@@ -14,7 +14,7 @@
 .EXAMPLE
 .\Restart-VCenterHosts.ps1 -Server vcenterServer.my.com -Credential $vcenterCredObj -WhatIf
 .INPUTS
- [string] vCenter Server name 
+ [string] vCenter Server name
  [PSCredential] vCenter Credentials
 .OUTPUTS
  Log messages are output to the console.

@@ -29,6 +29,8 @@
 Disable Host Alarms
 TheSleepyAdmin
  https://communities.vmware.com/t5/VMware-PowerCLI-Discussions/Enable-and-Disable-Alarm-Actions-on-a-Single-VM/td-p/2851127
+ LucD (mod)
+ https://communities.vmware.com/t5/VMware-PowerCLI-Discussions/PowerCLI-Enable-Disable-Alarm-Actions-on-Hosts-Clusters/td-p/2124257
  Break labels
 Manoj Sahoo
 https://ridicurious.com/2020/01/23/deep-dive-break-continue-return-exit-in-powershell/
@@ -70,90 +72,6 @@ function Connect-TargetVIServers {
   Connect-VIServer -Server $_ -Credential $Credential | Out-Null
  }
 }
-function Disable-ClusterRule {
- process {
-  Write-Host ('{0},{1}' -f $MyInvocation.MyCommand.name, $_.name) -Fore Green
-  $_ | Get-DrsRule | Disable-Rule
-  $_ | Get-DrsVMHostRule | Disable-Rule
-  $_
- }
-}
-function Restore-ClusterRule {
- process {
-  Write-Host ('{0},{1}' -f $MyInvocation.MyCommand.name, $_.name) -Fore Green
-  $baseClusterState = $_
-  $rules1 = $_ | Get-DrsRule
-  $rules2 = $_ | Get-DrsVMHostRule
-  foreach ($rule in ($rules1) ) {
-   Restore-Rule $baseClusterState $rule
-  }
-  foreach ($rule in ($rules2) ) {
-   Restore-Rule $baseClusterState $rule
-  }
-  $_
- }
-}
-function Set-ClusterRules {
- process {
-  Write-Host ('{0},{1}' -f $MyInvocation.MyCommand.name, $_.name) -Fore Green
-  $drsRules1 = $_ | Get-DrsRule
-  $drsRules2 = $_ | Get-DrsVMHostRule
-  if (($drsRules1.Enabled -contains $true) -or ($drsRules2.Enabled -contains $true)) {
-   Write-Host 'Kill'
-   $drsRules1 | Disable-Rule
-   $drsRules2 | Disable-Rule
-  }
-  else {
-   Write-Host 'Marry'
-   $baseClusterState = $_
-   foreach ($rule in ($drsRules1, $drsRules2) ) {
-    Restore-Rule $baseClusterState $rule
-   }
-  }
-  $_
- }
-}
-
-function Disable-Rule {
- process {
-  $msgVars = $MyInvocation.MyCommand.name, $_.Cluster, $_.Name
-  Write-Host ( '{0},{1},Original Setting,Rule:[{2}],Enabled:[{3}]' -f ($msgVars + $_.Enabled) ) -Fore DarkMagenta
-  if ($_.Enabled -eq $True) {
-   Write-Host ( '{0},{1},Updating,Rule:[{2}],Enabled:[False]' -f $msgVars ) -Fore Yellow
-   $ruleParams = @{
-    Enabled = $False
-    Confirm = $False
-    WhatIf  = $WhatIf
-    # ErrorAction = 'SilentlyContinue'
-   }
-   # switch -Wildcard ( $_.Type ) {
-   #  '*Affinity*' { Get-DrsRule -Name $_.name -Cluster $_.Cluster | Set-DrsRule @ruleParams | Out-Null }
-   #  'MustRunOn' { Get-DrsVMHostRule -Name $_.name -Cluster $_.Cluster | Set-DrsVMHostRule @ruleParams | Out-Null }
-   # }
-   if ($_.Type -match 'Affinity') { $_ | Set-DrsRule @ruleParams | Out-Null }
-   if ($_.Type -match 'MustRunOn') { $_ | Set-DrsVMHostRule @ruleParams | Out-Null }
-  }
- }
-}
-function Restore-Rule ($cluster, $rule) {
- $baseRuleData = $cluster.ExtensionData.Configuration.Rule.Where({ $_.name -eq $rule.Name })
- Write-Host ( $baseRuleData | Out-String)
- if ($baseRuleData.Enabled -eq $true) {
-  $msgVars = $MyInvocation.MyCommand.name, $cluster.name, $rule.name, 'True'
-  Write-Host ('{0},{1},[{2}],Enabled: [{3}]' -f $msgVars) -Fore DarkMagenta
-  $ruleParams = @{
-   Confirm = $False
-   WhatIf  = $WhatIf
-   # ErrorAction = 'SilentlyContinue'
-  }
-  # switch -Wildcard ( $rule.Type ) {
-  #  '*Affinity*' { $rule | Set-DrsRule @ruleParams -Enabled:$ruleState.Enabled | Out-Null }
-  #  'MustRunOn' { $rule | Set-DrsVMHostRule @ruleParams -Enabled:$ruleState.Enabled | Out-Null }
-  # }
-  if ($rule.Type -match 'Affinity') { $rule | Set-DrsRule @ruleParams | Out-Null }
-  if ($rule.Type -match 'MustRunOn') { $rule | Set-DrsVMHostRule @ruleParams | Out-Null }
- }
-}
 function Disable-ClusterHA {
  process {
   Write-Host ('{0},{1},HA Orginal Status: {2}' -f $MyInvocation.MyCommand.name, $_.Name, $_.HAEnabled) -Fore DarkYellow
@@ -168,7 +86,7 @@ function Enable-ClusterDRS {
   $_
  }
 }
-function Get-VCenterClusters {
+function Get-VCenterCluster {
  process {
   Write-Host ('{0},{1}' -f $MyInvocation.MyCommand.name, $_.name) -Fore Green
   Get-Cluster -Server $_.name
@@ -201,6 +119,7 @@ function Restart-VMHosts {
   :parentVmHostLoop foreach ($vmHost in $vmHosts) {
    Write-Host ('{0},{1},Restarting Host' -f $MyInvocation.MyCommand.name, $vmHost.name) -Fore Blue
    # Place MaintenanceMode
+   Disable-HostAlarms $_ $vmHost
    $vmHost | Set-VMHost -State Maintenance -Evacuate:$true -RunAsync -Confirm:$false -WhatIf:$WhatIf | Out-Null
    $global:timeout = 1200
    Wait-VMHostState $vmHost.name Maintenance
@@ -212,6 +131,7 @@ function Restart-VMHosts {
    Wait-VMHostState $vmHost.name Maintenance
    $vmHost | Set-VMHost -State Connected -Confirm:$false -RunAsync -WhatIf:$WhatIf | Out-Null
    Wait-VMHostState $vmHost.name Connected
+   Enable-HostAlarms $_ $vmHost
   }
   $_
  }
@@ -251,7 +171,7 @@ function Import-VMwareModules {
 function Show-ClusterInfo {
  process {
   $output = $_.name, $_.DrsEnabled, $_.DrsAutomationLevel, $_.HAEnabled
-  Write-Host ('Cluster:{0},DRS:{1},Level:{2},HA:{3}' -f $output) -Fore DarkCyan
+  Write-Host ('Cluster: [{0}],DRS: [{1}],Level: [{2}],HA: [{3}]' -f $output) -Fore DarkCyan
  }
 }
 filter Skip-Cluster {
@@ -260,6 +180,96 @@ filter Skip-Cluster {
   $_
  }
  else { Write-Host ('{0},[{1}]' -f $MyInvocation.MyCommand.name, $_.name) -Fore DarkYellow }
+}
+function Get-RuleState {
+ begin {
+  function Write-RuleState {
+   process {
+    $msgVars = $MyInvocation.MyCommand.Name, $_.Cluster, $_.Name, $_.Enabled
+    Write-Host ('{0},[{1}],[{2}],[{3}]' -f $msgVars) -Fore Blue
+   }
+  }
+ }
+ process {
+  Write-Host ('{0},[{1}]' -f $MyInvocation.MyCommand.name, $_.name) -Fore Blue
+  $drsRules = $_ | Get-DrsRule
+  $hostRules = $_ | Get-DrsVMHostRule
+  $drsRules | Write-RuleState
+  $hostRules | Write-RuleState
+  $_
+ }
+}
+function Suspend-Rules {
+ begin {
+  $global:savedDrsRules = @()
+  $global:savedHostRules = @()
+ }
+ process {
+  Write-Host ('{0},[{1}]' -f $MyInvocation.MyCommand.name, $_.name) -Fore Yellow
+  $params = @{
+   Enabled     = $False
+   Confirm     = $False
+   WhatIf      = $WhatIf
+   ErrorAction = 'SilentlyContinue'
+  }
+  $drsRules = $_ | Get-DrsRule | Where-Object { $_.enabled -eq $True }
+  foreach ($rule in $drsRules) {
+   Write-Host ('{0},[{1}],[{2}]' -f $MyInvocation.MyCommand.name, $_.Name, $rule.Name) -Fore Yellow
+   $rule | Set-DrsRule @params | Out-Null
+   $global:savedDrsRules += [PSCustomObject]@{'cluster' = $_.name; 'rule' = $rule.Name }
+  }
+  $hostRules = $_ | Get-DrsVMHostRule | Where-Object { $_.enabled -eq $True }
+  foreach ($rule in $hostRules) {
+   Write-Host ('{0},[{1}],[{2}]' -f $MyInvocation.MyCommand.name, $_.Name, $rule.Name) -Fore Yellow
+   $rule | Set-DrsVMHostRule @params | Out-Null
+   $global:savedHostRules += [PSCustomObject]@{'cluster' = $_.name; 'rule' = $rule.Name }
+  }
+  $_
+ }
+}
+function Resume-Rules {
+ process {
+  Write-Host ('{0},[{1}]' -f $MyInvocation.MyCommand.name, $_.name) -Fore Green
+  $params = @{
+   Enabled     = $True
+   Confirm     = $False
+   ErrorAction = 'SilentlyContinue'
+   WhatIf      = $WhatIf
+  }
+  foreach ($rule in $global:savedDrsRules) {
+   Write-Host ('{0},[{1}],[{2}]' -f $MyInvocation.MyCommand.name, $rule.cluster, $rule.rule) -Fore Green
+   $_ | Get-DrsRule -name $rule.rule | Set-DrsRule @params | Out-Null
+  }
+  foreach ($rule in $global:savedHostRules) {
+   Write-Host ('{0},[{1}],[{2}]' -f $MyInvocation.MyCommand.name, $rule.cluster, $rule.rule) -Fore Green
+   $_ | Get-DrsVMHostRule -name $rule.rule | Set-DrsVMHostRule @params | Out-Null
+  }
+  $_
+ }
+ end {
+  Remove-Variable -Name savedDrsRules -Scope Global
+  Remove-Variable -Name savedHostRules -Scope Global
+ }
+}
+function Disable-HostAlarms ($cluster, $vmHost) {
+ process {
+  Write-Host ('{0},[{1}],[{2}]' -f $MyInvocation.MyCommand.name, $cluster, $vmHost) -Fore Yellow
+  $alarmMgr = Get-View AlarmManager
+  if (-not$WhatIf) {
+   $vCenter = $cluster.Uid.Split('@:')[1]
+   ($alarmMgr.where({ $_.Client.ServiceUrl -match $vCenter })).EnableAlarmActions($vmHost.Extensiondata.MoRef, $false)
+  }
+ }
+}
+function Enable-HostAlarms ($cluster, $vmHost) {
+ process {
+  Write-Host ('{0},[{1}],[{2}]' -f $MyInvocation.MyCommand.name, $cluster, $vmHost) -Fore Green
+  $alarmMgr = Get-View AlarmManager
+  if (-not$WhatIf) {
+   $vCenter = $cluster.Uid.Split('@:')[1]
+   ($alarmMgr.where({ $_.Client.ServiceUrl -match $vCenter })).EnableAlarmActions($vmHost.Extensiondata.MoRef, $true)
+  }
+ }
 }
 # ===============================================
 . .\lib\Clear-SessionData.ps1
@@ -271,15 +281,11 @@ $env:psmodulepath = 'C:\Program Files\WindowsPowerShell\Modules; C:\Windows\syst
 Show-TestRun
 
 $VIServer | Connect-TargetVIServers
-$clusters = $global:DefaultVIServers | Get-VCenterClusters | Skip-Cluster
+$clusters = $global:DefaultVIServers | Get-VCenterCluster | Skip-Cluster
 
-# $clusters | Enable-ClusterDRS | Set-ClusterRules | Complete-Pipeline
-$clusters | Disable-ClusterRule
-$clusters | Restore-ClusterRule
-# $clusters | Get-VMState | Complete-Pipeline
-# $clusters | Restart-VMHosts | Complete-Pipeline
-# $clusters | Set-ClusterRules | Restore-ClusterDRS | Complete-Pipeline
-# $clusters | Restore-VMState | Complete-Pipeline
+$clusters | Enable-ClusterDRS | Get-RuleState | Suspend-Rules | Complete-Pipeline
+$clusters | Restart-VMHosts | Complete-Pipeline
+$clusters | Resume-Rules | Restore-ClusterDRS | Complete-Pipeline
 
 Disconnect-VIServer * -Confirm:$False
 Show-TestRun

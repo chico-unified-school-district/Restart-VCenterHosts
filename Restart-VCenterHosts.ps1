@@ -160,11 +160,13 @@ function Restore-ClusterHA {
 function Import-VMwareModules {
  Write-Host ('{0}' -f $MyInvocation.MyCommand.Name)
  if (Get-Module -ListAvailable -name VMware.VimAutomation.Core) {
+  Write-Host ('{0},Module Found. Importing...' -f $MyInvocation.MyCommand.Name)
   # $cmdlets = 'Connect-VIServer','Disconnect-VIServer','Get-Cluster','Set-Cluster','Get-VMHost','Set-VMHost ','Restart-VMhost'
   # Import-Module -Name VMware.VimAutomation.Core -Cmdlet $cmdlets | Out-Null
   Import-Module -Name VMware.VimAutomation.Core | Out-Null
  }
  else {
+  Write-Host ('{0},Module Not found. Installing...' -f $MyInvocation.MyCommand.Name)
   Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Force -Confirm:$false
   Import-Module -Name VMware.VimAutomation.Core | Out-Null
  }
@@ -173,6 +175,7 @@ function Import-VMwareModules {
   EXIT
  }
  # Get-PowerCLIVersion
+ Write-Host ('{0},Setting PowerCli behavior...' -f $MyInvocation.MyCommand.Name)
  $powercliParams = @{
   InvalidCertificateAction = 'Ignore'
   ParticipateInCeip        = $false

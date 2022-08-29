@@ -166,17 +166,18 @@ function Import-VMwareModules {
   Import-Module -Name VMware.VimAutomation.Core | Out-Null
  }
  else {
-  Write-Host ('{0},Module Not found. Installing...' -f $MyInvocation.MyCommand.Name)
-  [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-  $installParams = @{
-   Name               = 'VMware.PowerCLI'
-   SkipPublisherCheck = $true
-   Scope              = 'CurrentUser'
-   Force              = $true
-   Confirm            = $false
-  }
-  Install-Module @installParams
-  Import-Module -Name VMware.VimAutomation.Core | Out-Null
+  Write-Host ('{0},Module Not found. Exiting..' -f $MyInvocation.MyCommand.Name)
+  # [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+  # $installParams = @{
+  #  Name               = 'VMware.PowerCLI'
+  #  SkipPublisherCheck = $true
+  #  Scope              = 'CurrentUser'
+  #  Force              = $true
+  #  Confirm            = $false
+  # }
+  # Install-Module @installParams
+  # Import-Module -Name VMware.VimAutomation.Core | Out-Null
+  EXIT
  }
  if ( !(Get-Module -ListAvailable -name VMware.VimAutomation.Core)) {
   Write-Error "VMware.VimAutomation.Core not available. EXITING"

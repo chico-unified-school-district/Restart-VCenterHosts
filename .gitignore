@@ -8,3 +8,7 @@ logs/*
 *.html
 *.cp
 *desktop.ini
+/test2.ps1
+/test.ps1
+/notes.ps1
+/jenkins.ps1

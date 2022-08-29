@@ -3,17 +3,18 @@ cd .\$ENV:JOB_NAME
 'git pull'
 git pull
 'git last log entry'
-git log -1
+git log -2
 # Set this to true or false
-$test = $false
+$test = $true
+# vcenter servers: 'DO-VCENTER.chico.usd', , 'DO-VDI-VSA-01.CHICO.USD'
 $scriptParams = @{
- VIServers    = 'DO-VCENTER.chico.usd', 'dr-cusd-vsa.chico.usd', 'DO-VDI-VSA-01.CHICO.USD'
+ VIServers    = 'dr-cusd-vsa.chico.usd'
  Credential   = .\lib\Set-PSCred.ps1 $ENV:VCENTER_USER $ENV:VCENTER_PW
- VIServer     = 'do-vdi-vsa-01.chico.usd'
+ VIServer     = 'dr-cusd-vsa.chico.usd'
  Cred         = $vsphere
- SkipClusters = 'DO2', 'Pivot3 Cluster'
+ SkipClusters = 'Pivot3 Cluster'
  SkipHosts    = $null
- RebootDays   = 30
+ MaxDaysOn    = 30
  Verbose      = $test
  WhatIf       = $test
 }

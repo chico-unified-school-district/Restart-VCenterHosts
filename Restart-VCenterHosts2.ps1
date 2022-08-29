@@ -55,7 +55,7 @@ param (
  [Parameter(Mandatory = $False)]
  [string[]]$SkipHosts,
  # If over x days then reboot host
- [int]$RebootDays = 30,
+ [int]$MaxDaysOn = 30,
  [Alias('wi')]
  [switch]$WhatIf
 )
@@ -117,20 +117,27 @@ function Restart-VMHosts {
   Write-Host ('{0},{1}' -f $MyInvocation.MyCommand.name, $_.name) -Fore Green
   $vmHosts = $_ | Get-VMHost
   :parentVmHostLoop foreach ($vmHost in $vmHosts) {
-   Write-Host ('{0},{1},Restarting Host' -f $MyInvocation.MyCommand.name, $vmHost.name) -Fore Blue
-   # Place MaintenanceMode
-   Disable-HostAlarms $_ $vmHost
-   $vmHost | Set-VMHost -State Maintenance -Evacuate:$true -RunAsync -Confirm:$false -WhatIf:$WhatIf | Out-Null
-   $global:timeout = 1200
-   Wait-VMHostState $vmHost.name Maintenance
-   $vmHost | Restart-VMhost -Confirm:$false -RunAsync -WhatIf:$WhatIf | Out-Null
-   if (-not$WhatIf) {
-    Write-Host ('{0},{1},{2},120 second delay...' -f $MyInvocation.MyCommand.name, $_.name, $vmHost.name) -Fore Green
-    Start-Sleep 120
+   $upDays = (New-TimeSpan -Start $vmhost.ExtensionData.Summary.Runtime.BootTime -End (Get-Date)).Days
+   if ($upDays -gt $MaxDaysOn) {
+    Write-Host ('{0},{1},Restarting Host' -f $MyInvocation.MyCommand.name, $vmHost.name) -Fore Blue
+    # Place MaintenanceMode
+    Disable-HostAlarms $_ $vmHost
+    $vmHost | Set-VMHost -State Maintenance -Evacuate:$true -RunAsync -Confirm:$false -WhatIf:$WhatIf | Out-Null
+    $global:timeout = 1200
+    Wait-VMHostState $vmHost.name Maintenance
+    $vmHost | Restart-VMhost -Confirm:$false -RunAsync -WhatIf:$WhatIf | Out-Null
+    if (-not$WhatIf) {
+     Write-Host ('{0},{1},{2},300 second delay...' -f $MyInvocation.MyCommand.name, $_.name, $vmHost.name) -Fore Green
+     Start-Sleep 300
+    }
+    Wait-VMHostState $vmHost.name Maintenance
+    $vmHost | Set-VMHost -State Connected -Confirm:$false -RunAsync -WhatIf:$WhatIf | Out-Null
+    Wait-VMHostState $vmHost.name Connected
+    Enable-HostAlarms $_ $vmHost
    }
-   Wait-VMHostState $vmHost.name Maintenance
-   $vmHost | Set-VMHost -State Connected -Confirm:$false -RunAsync -WhatIf:$WhatIf | Out-Null
-   Wait-VMHostState $vmHost.name Connected
+  }
+  foreach ($vmHost in $vmHosts) {
+   # Force Renabled Host Alarms in case parentVmHostLoop is exited due to an error
    Enable-HostAlarms $_ $vmHost
   }
   $_
@@ -271,14 +278,20 @@ function Enable-HostAlarms ($cluster, $vmHost) {
   }
  }
 }
+filter Skip-RecentlyRebootedHosts {
+ Write-Host ('{0},[{1}],[{2}]' -f $MyInvocation.MyCommand.name, $cluster, $vmHost) -Fore Green
+ $upDays = (New-TimeSpan -Start $vmhost.ExtensionData.Summary.Runtime.BootTime -End (Get-Date)).Days
+ if ($upDays -gt $MaxDaysOn) { $_ }
+}
 # ===============================================
 . .\lib\Clear-SessionData.ps1
 # . .\lib\Load-Module.ps1
 . .\lib\Set-PSCred.ps1
 . .\lib\Show-TestRun.ps1
 # ===============================================
-$env:psmodulepath = 'C:\Program Files\WindowsPowerShell\Modules; C:\Windows\system32\config\systemprofile\Documents\WindowsPowerShell\Modules; C:\Program Files (x86)\WindowsPowerShell\Modules; C:\Windows\system32\WindowsPowerShell\v1.0\Modules; C:\Program Files (x86)\VMware\Infrastructure\PowerCLI\Modules'
 Show-TestRun
+$env:psmodulepath = 'C:\Program Files\WindowsPowerShell\Modules; C:\Windows\system32\config\systemprofile\Documents\WindowsPowerShell\Modules; C:\Program Files (x86)\WindowsPowerShell\Modules; C:\Windows\system32\WindowsPowerShell\v1.0\Modules; C:\Program Files (x86)\VMware\Infrastructure\PowerCLI\Modules'
+Import-VMwareModules
 
 $VIServer | Connect-TargetVIServers
 $clusters = $global:DefaultVIServers | Get-VCenterCluster | Skip-Cluster

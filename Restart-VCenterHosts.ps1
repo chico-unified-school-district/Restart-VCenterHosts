@@ -158,6 +158,7 @@ function Restore-ClusterHA {
  }
 }
 function Import-VMwareModules {
+ Write-Host ('{0}' -f $MyInvocation.MyCommand.Name)
  if (Get-Module -ListAvailable -name VMware.VimAutomation.Core) {
   # $cmdlets = 'Connect-VIServer','Disconnect-VIServer','Get-Cluster','Set-Cluster','Get-VMHost','Set-VMHost ','Restart-VMhost'
   # Import-Module -Name VMware.VimAutomation.Core -Cmdlet $cmdlets | Out-Null

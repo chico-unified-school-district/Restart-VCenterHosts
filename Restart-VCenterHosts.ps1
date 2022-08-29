@@ -296,8 +296,10 @@ filter Skip-RecentlyRebootedHosts {
 . .\lib\Show-TestRun.ps1
 # ===============================================
 Show-TestRun
+'Derp1'
 # $env:psmodulepath = 'C:\Program Files\WindowsPowerShell\Modules; C:\Windows\system32\config\systemprofile\Documents\WindowsPowerShell\Modules; C:\Program Files (x86)\WindowsPowerShell\Modules; C:\Windows\system32\WindowsPowerShell\v1.0\Modules; C:\Program Files (x86)\VMware\Infrastructure\PowerCLI\Modules'
 Import-VMwareModules
+'Derp2'
 
 $VIServer | Connect-TargetVIServers
 $clusters = $global:DefaultVIServers | Get-VCenterCluster | Skip-Cluster

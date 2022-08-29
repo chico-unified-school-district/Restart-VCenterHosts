@@ -165,15 +165,20 @@ function Import-VMwareModules {
  }
  else {
   Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Force -Confirm:$false
-  Import-Module -Name VMware.VimAutomation.Core -Cmdlet $cmdlets | Out-Null
+  Import-Module -Name VMware.VimAutomation.Core | Out-Null
  }
  if ( !(Get-Module -ListAvailable -name VMware.VimAutomation.Core)) {
   Write-Error "VMware.VimAutomation.Core not available. EXITING"
   EXIT
  }
  # Get-PowerCLIVersion
-
- Set-PowerCLIConfiguration -InvalidCertificateAction Ignore -Scope User -Confirm:$false | Out-Null
+ $powercliParams = @{
+  InvalidCertificateAction = 'Ignore'
+  ParticipateInCeip        = $false
+  Scope                    = 'User'
+  Confirm                  = $false
+ }
+ Set-PowerCLIConfiguration @powercliParams | Out-Null
 }
 function Show-ClusterInfo {
  process {
@@ -290,7 +295,6 @@ filter Skip-RecentlyRebootedHosts {
 . .\lib\Show-TestRun.ps1
 # ===============================================
 Show-TestRun
-Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Force -Confirm:$false
 # $env:psmodulepath = 'C:\Program Files\WindowsPowerShell\Modules; C:\Windows\system32\config\systemprofile\Documents\WindowsPowerShell\Modules; C:\Program Files (x86)\WindowsPowerShell\Modules; C:\Windows\system32\WindowsPowerShell\v1.0\Modules; C:\Program Files (x86)\VMware\Infrastructure\PowerCLI\Modules'
 Import-VMwareModules
 

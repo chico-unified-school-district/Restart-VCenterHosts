@@ -167,7 +167,14 @@ function Import-VMwareModules {
  }
  else {
   Write-Host ('{0},Module Not found. Installing...' -f $MyInvocation.MyCommand.Name)
-  Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Force -Confirm:$false
+  $installParams = @{
+   Name               = ' VMware.PowerCLI'
+   SkipPublisherCheck = $true
+   Scope              = 'CurrentUser'
+   Force              = $true
+   Confirm            = $false
+  }
+  Install-Module @installParams
   Import-Module -Name VMware.VimAutomation.Core | Out-Null
  }
  if ( !(Get-Module -ListAvailable -name VMware.VimAutomation.Core)) {

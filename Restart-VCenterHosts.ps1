@@ -169,7 +169,7 @@ function Import-VMwareModules {
   Write-Host ('{0},Module Not found. Installing...' -f $MyInvocation.MyCommand.Name)
   [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
   $installParams = @{
-   Name               = ' VMware.PowerCLI'
+   Name               = 'VMware.PowerCLI'
    SkipPublisherCheck = $true
    Scope              = 'CurrentUser'
    Force              = $true
@@ -308,7 +308,7 @@ filter Skip-RecentlyRebootedHosts {
 # ===============================================
 Show-TestRun
 'Derp1'
-# $env:psmodulepath = 'C:\Program Files\WindowsPowerShell\Modules; C:\Windows\system32\config\systemprofile\Documents\WindowsPowerShell\Modules; C:\Program Files (x86)\WindowsPowerShell\Modules; C:\Windows\system32\WindowsPowerShell\v1.0\Modules; C:\Program Files (x86)\VMware\Infrastructure\PowerCLI\Modules'
+$env:psmodulepath = 'C:\Program Files\WindowsPowerShell\Modules; C:\Windows\system32\config\systemprofile\Documents\WindowsPowerShell\Modules; C:\Program Files (x86)\WindowsPowerShell\Modules; C:\Windows\system32\WindowsPowerShell\v1.0\Modules; C:\Program Files (x86)\VMware\Infrastructure\PowerCLI\Modules'
 Import-VMwareModules
 'Derp2'
 

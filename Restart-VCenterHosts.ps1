@@ -167,6 +167,7 @@ function Import-VMwareModules {
  }
  else {
   Write-Host ('{0},Module Not found. Installing...' -f $MyInvocation.MyCommand.Name)
+  [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
   $installParams = @{
    Name               = ' VMware.PowerCLI'
    SkipPublisherCheck = $true

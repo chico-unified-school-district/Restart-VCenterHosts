@@ -308,8 +308,7 @@ filter Skip-RecentlyRebootedHosts {
 . .\lib\Show-TestRun.ps1
 # ===============================================
 Show-TestRun
-
-$env:psmodulepath = 'C:\Program Files\WindowsPowerShell\Modules; C:\Windows\system32\config\systemprofile\Documents\WindowsPowerShell\Modules; C:\Program Files (x86)\WindowsPowerShell\Modules; C:\Windows\system32\WindowsPowerShell\v1.0\Modules; C:\Program Files (x86)\VMware\Infrastructure\PowerCLI\Modules'
+$env:psmodulepath = "$home\Documents\WindowsPowerShell\Modules;C:\Program Files\WindowsPowerShell\Modules; C:\Windows\system32\config\systemprofile\Documents\WindowsPowerShell\Modules; C:\Program Files (x86)\WindowsPowerShell\Modules; C:\Windows\system32\WindowsPowerShell\v1.0\Modules; C:\Program Files (x86)\VMware\Infrastructure\PowerCLI\Modules"
 Import-VMwareModules
 
 $VIServer | Connect-TargetVIServers

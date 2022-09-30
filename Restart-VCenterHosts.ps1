@@ -95,12 +95,12 @@ function Get-VCenterCluster {
 function Restart-VMHosts {
  begin {
   function Wait-VMHostState ($thisHost, $state) {
-   Write-Verbose ('{0},{1},{2},Timeout in {3}' -f $MyInvocation.MyCommand.name, $thisHost, $state, $global:timeout)
-   # Write-Host ('{0},{1},{2},Timeout in {3}' -f $MyInvocation.MyCommand.name, $thisHost, $state, $global:timeout) -Fore Red
+   Write-Verbose ('{0},{1},{2},Timeout in {3}' -f $MyInvocation.MyCommand.name, $thisHost, $state, $script:timeout)
+   # Write-Host ('{0},{1},{2},Timeout in {3}' -f $MyInvocation.MyCommand.name, $thisHost, $state, $script:timeout) -Fore Red
    if ((Get-VMHost -Name $thisHost).ConnectionState -ne $state) {
-    if ($global:timeout -gt 0) {
+    if ($script:timeout -gt 0) {
      if (-not$WhatIf) {
-      $global:timeout -= 10
+      $script:timeout -= 10
       Start-Sleep 10
       Wait-VMHostState $thisHost $state
      }
@@ -123,7 +123,7 @@ function Restart-VMHosts {
     # Place MaintenanceMode
     Disable-HostAlarms $_ $vmHost
     $vmHost | Set-VMHost -State Maintenance -Evacuate:$true -RunAsync -Confirm:$false -WhatIf:$WhatIf | Out-Null
-    $global:timeout = 1200
+    $script:timeout = 1200
     Wait-VMHostState $vmHost.name Maintenance
     $vmHost | Restart-VMhost -Confirm:$false -RunAsync -WhatIf:$WhatIf | Out-Null
     if (-not$WhatIf) {
@@ -226,8 +226,8 @@ function Get-RuleState {
 }
 function Suspend-Rules {
  begin {
-  $global:savedDrsRules = @()
-  $global:savedHostRules = @()
+  $script:savedDrsRules = @()
+  $script:savedHostRules = @()
  }
  process {
   Write-Host ('{0},[{1}]' -f $MyInvocation.MyCommand.name, $_.name) -Fore Yellow
@@ -241,13 +241,13 @@ function Suspend-Rules {
   foreach ($rule in $drsRules) {
    Write-Host ('{0},[{1}],[{2}]' -f $MyInvocation.MyCommand.name, $_.Name, $rule.Name) -Fore Yellow
    $rule | Set-DrsRule @params | Out-Null
-   $global:savedDrsRules += [PSCustomObject]@{'cluster' = $_.name; 'rule' = $rule.Name }
+   $script:savedDrsRules += [PSCustomObject]@{'cluster' = $_.name; 'rule' = $rule.Name }
   }
   $hostRules = $_ | Get-DrsVMHostRule | Where-Object { $_.enabled -eq $True }
   foreach ($rule in $hostRules) {
    Write-Host ('{0},[{1}],[{2}]' -f $MyInvocation.MyCommand.name, $_.Name, $rule.Name) -Fore Yellow
    $rule | Set-DrsVMHostRule @params | Out-Null
-   $global:savedHostRules += [PSCustomObject]@{'cluster' = $_.name; 'rule' = $rule.Name }
+   $script:savedHostRules += [PSCustomObject]@{'cluster' = $_.name; 'rule' = $rule.Name }
   }
   $_
  }
@@ -261,11 +261,11 @@ function Resume-Rules {
    ErrorAction = 'SilentlyContinue'
    WhatIf      = $WhatIf
   }
-  foreach ($rule in $global:savedDrsRules) {
+  foreach ($rule in $script:savedDrsRules) {
    Write-Host ('{0},[{1}],[{2}]' -f $MyInvocation.MyCommand.name, $rule.cluster, $rule.rule) -Fore Green
    $_ | Get-DrsRule -name $rule.rule | Set-DrsRule @params | Out-Null
   }
-  foreach ($rule in $global:savedHostRules) {
+  foreach ($rule in $script:savedHostRules) {
    Write-Host ('{0},[{1}],[{2}]' -f $MyInvocation.MyCommand.name, $rule.cluster, $rule.rule) -Fore Green
    $_ | Get-DrsVMHostRule -name $rule.rule | Set-DrsVMHostRule @params | Out-Null
   }
@@ -312,7 +312,7 @@ $env:psmodulepath = "$home\Documents\WindowsPowerShell\Modules;C:\Program Files\
 Import-VMwareModules
 
 $VIServer | Connect-TargetVIServers
-$clusters = $global:DefaultVIServers | Get-VCenterCluster | Skip-Cluster
+$clusters = $script:DefaultVIServers | Get-VCenterCluster | Skip-Cluster
 
 $clusters | Enable-ClusterDRS | Get-RuleState | Suspend-Rules | Complete-Pipeline
 $clusters | Restart-VMHosts | Complete-Pipeline

@@ -69,7 +69,7 @@ function Complete-Pipeline {
 function Connect-TargetVIServers {
  process {
   Write-Host ('{0},{1}' -f $MyInvocation.MyCommand.name, $_) -Fore Green
-  Connect-VIServer -Server $_ -Credential $Credential | Out-Null
+  Connect-VIServer -Server $_ -Credential $VICredential | Out-Null
  }
 }
 function Disable-ClusterHA {

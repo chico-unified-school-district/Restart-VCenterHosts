@@ -261,19 +261,24 @@ function Resume-Rules {
    ErrorAction = 'SilentlyContinue'
    WhatIf      = $WhatIf
   }
+
+  # Write-Host ($script:savedDrsRules | Out-String)
   foreach ($rule in $script:savedDrsRules) {
+   # Write-Host ($rule | Out-String)
    Write-Host ('{0},[{1}],DRS [{2}]' -f $MyInvocation.MyCommand.name, $rule.cluster, $rule.rule) -Fore Green
-   $_ | Get-DrsRule -name $rule.rule | Set-DrsRule @params | Out-Null
+   $_ | Get-DrsRule -name $rule.rule -ErrorAction SilentlyContinue | Set-DrsRule @params | Out-Null
   }
+  # Write-Host ($script:savedHostRules | Out-String)
   foreach ($rule in $script:savedHostRules) {
+   # Write-Host ($rule | Out-String)
    Write-Host ('{0},[{1}],HOST [{2}]' -f $MyInvocation.MyCommand.name, $rule.cluster, $rule.rule) -Fore Green
-   $_ | Get-DrsVMHostRule -name $rule.rule | Set-DrsVMHostRule @params | Out-Null
+   $_ | Get-DrsVMHostRule -name $rule.rule -ErrorAction SilentlyContinue | Set-DrsVMHostRule @params | Out-Null
   }
   $_
  }
  end {
-  Remove-Variable -Name savedDrsRules -Scope Global
-  Remove-Variable -Name savedHostRules -Scope Global
+  # Remove-Variable -Name savedDrsRules -Scope Script
+  # Remove-Variable -Name savedHostRules -Scope Script
  }
 }
 function Disable-HostAlarms ($cluster, $vmHost) {

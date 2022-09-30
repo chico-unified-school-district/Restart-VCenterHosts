@@ -44,7 +44,7 @@ param (
  [string[]]$VIServer,
  # VIServer Credentials with Proper Permission Levels
  [Parameter(Mandatory = $True)]
- [System.Management.Automation.PSCredential]$Credential,
+ [System.Management.Automation.PSCredential]$VICredential,
  # Cluster Name(s) to Target
  # [Parameter(Mandatory = $False)]
  # [string[]]$TargetClusters,

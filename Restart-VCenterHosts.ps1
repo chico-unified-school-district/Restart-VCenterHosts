@@ -239,13 +239,13 @@ function Suspend-Rules {
   }
   $drsRules = $_ | Get-DrsRule | Where-Object { $_.enabled -eq $True }
   foreach ($rule in $drsRules) {
-   Write-Host ('{0},[{1}],[{2}]' -f $MyInvocation.MyCommand.name, $_.Name, $rule.Name) -Fore Yellow
+   Write-Host ('{0},[{1}],DRS [{2}]' -f $MyInvocation.MyCommand.name, $_.Name, $rule.Name) -Fore Yellow
    $rule | Set-DrsRule @params | Out-Null
    $script:savedDrsRules += [PSCustomObject]@{'cluster' = $_.name; 'rule' = $rule.Name }
   }
   $hostRules = $_ | Get-DrsVMHostRule | Where-Object { $_.enabled -eq $True }
   foreach ($rule in $hostRules) {
-   Write-Host ('{0},[{1}],[{2}]' -f $MyInvocation.MyCommand.name, $_.Name, $rule.Name) -Fore Yellow
+   Write-Host ('{0},[{1}],HOST [{2}]' -f $MyInvocation.MyCommand.name, $_.Name, $rule.Name) -Fore Yellow
    $rule | Set-DrsVMHostRule @params | Out-Null
    $script:savedHostRules += [PSCustomObject]@{'cluster' = $_.name; 'rule' = $rule.Name }
   }
@@ -262,11 +262,11 @@ function Resume-Rules {
    WhatIf      = $WhatIf
   }
   foreach ($rule in $script:savedDrsRules) {
-   Write-Host ('{0},[{1}],[{2}]' -f $MyInvocation.MyCommand.name, $rule.cluster, $rule.rule) -Fore Green
+   Write-Host ('{0},[{1}],DRS [{2}]' -f $MyInvocation.MyCommand.name, $rule.cluster, $rule.rule) -Fore Green
    $_ | Get-DrsRule -name $rule.rule | Set-DrsRule @params | Out-Null
   }
   foreach ($rule in $script:savedHostRules) {
-   Write-Host ('{0},[{1}],[{2}]' -f $MyInvocation.MyCommand.name, $rule.cluster, $rule.rule) -Fore Green
+   Write-Host ('{0},[{1}],HOST [{2}]' -f $MyInvocation.MyCommand.name, $rule.cluster, $rule.rule) -Fore Green
    $_ | Get-DrsVMHostRule -name $rule.rule | Set-DrsVMHostRule @params | Out-Null
   }
   $_

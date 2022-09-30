@@ -115,7 +115,7 @@ function Restart-VMHosts {
  }
  process {
   Write-Host ('{0},{1}' -f $MyInvocation.MyCommand.name, $_.name) -Fore Green
-  $vmHosts = $_ | Get-VMHost
+  $vmHosts = $_ | Get-VMHost | Where-Object { $_.ConnectionState -eq 'Connected' }
   :parentVmHostLoop foreach ($vmHost in $vmHosts) {
    $upDays = (New-TimeSpan -Start $vmhost.ExtensionData.Summary.Runtime.BootTime -End (Get-Date)).Days
    if ($upDays -gt $MaxDaysOn) {
@@ -304,7 +304,7 @@ function Enable-HostAlarms ($cluster, $vmHost) {
 filter Skip-RecentlyRebootedHosts {
  Write-Host ('{0},[{1}],[{2}]' -f $MyInvocation.MyCommand.name, $cluster, $vmHost) -Fore Green
  $upDays = (New-TimeSpan -Start $vmhost.ExtensionData.Summary.Runtime.BootTime -End (Get-Date)).Days
- if ($upDays -gt $MaxDaysOn) { $_ }
+ if (($MaxDaysOn) -and ($upDays -gt $MaxDaysOn)) { $_ }
 }
 # ===============================================
 . .\lib\Clear-SessionData.ps1
